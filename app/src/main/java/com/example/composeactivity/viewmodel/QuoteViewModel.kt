@@ -6,25 +6,59 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.composeactivity.data.Quote
-import com.example.composeactivity.data.RetrofitInstance
+import com.example.composeactivity.data.QuoteRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class QuoteViewModel : ViewModel() {
-    var quotes by mutableStateOf<List<Quote>>(emptyList())
+class QuoteViewModel(private val repository: QuoteRepository) : ViewModel() {
+    private val _quotes = MutableStateFlow<List<Quote>>(emptyList())
+    val quotes: StateFlow<List<Quote>> = _quotes.asStateFlow()
+
+    var categories by mutableStateOf<List<String>>(emptyList())
         private set
 
     init {
+        fetchCategories()
+        observeQuotes()
         fetchQuotes()
+    }
+
+    private fun fetchCategories() {
+        viewModelScope.launch {
+            categories = repository.getCategories()
+        }
     }
 
     private fun fetchQuotes() {
         viewModelScope.launch {
-            try {
-                val response = RetrofitInstance.api.getQuotes()
-                quotes = response.quotes
-            } catch (e: Exception) {
-                e.printStackTrace()
+            val apiQuotes = repository.getQuotesFromAPI()
+            if (apiQuotes.isNotEmpty()) {
+                repository.clearQuotesFromDB()
+                repository.saveQuotesToDB(apiQuotes)
             }
+        }
+    }
+
+
+    private fun observeQuotes() {
+        viewModelScope.launch {
+            repository.getQuotesFromDB().collect { updatedQuotes ->
+                _quotes.value = updatedQuotes
+            }
+        }
+    }
+
+    fun toggleLike(quote: Quote) {
+        viewModelScope.launch {
+            repository.toggleLike(quote)
+        }
+    }
+
+    fun toggleSave(quote: Quote) {
+        viewModelScope.launch {
+            repository.toggleSave(quote)
         }
     }
 }
