@@ -20,7 +20,6 @@ class QuoteViewModel(private val repository: QuoteRepository) : ViewModel() {
         private set
 
     init {
-        fetchCategories()
         observeQuotes()
         fetchQuotes()
     }
@@ -35,17 +34,17 @@ class QuoteViewModel(private val repository: QuoteRepository) : ViewModel() {
         viewModelScope.launch {
             val apiQuotes = repository.getQuotesFromAPI()
             if (apiQuotes.isNotEmpty()) {
-                repository.clearQuotesFromDB()
-                repository.saveQuotesToDB(apiQuotes)
+                repository.updateQuotesInDB(apiQuotes)
+                fetchCategories()
             }
         }
     }
-
 
     private fun observeQuotes() {
         viewModelScope.launch {
             repository.getQuotesFromDB().collect { updatedQuotes ->
                 _quotes.value = updatedQuotes
+                fetchCategories()
             }
         }
     }
@@ -59,6 +58,16 @@ class QuoteViewModel(private val repository: QuoteRepository) : ViewModel() {
     fun toggleSave(quote: Quote) {
         viewModelScope.launch {
             repository.toggleSave(quote)
+        }
+    }
+
+    fun syncQuotes(onSyncComplete: () -> Unit) {
+        viewModelScope.launch {
+            val apiQuotes = repository.getQuotesFromAPI()
+            if (apiQuotes.isNotEmpty()) {
+                repository.updateQuotesInDB(apiQuotes)
+                onSyncComplete()
+            }
         }
     }
 }

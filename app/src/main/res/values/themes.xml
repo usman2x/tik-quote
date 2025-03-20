@@ -2,4 +2,9 @@
 <resources>
 
     <style name="Theme.ComposeActivity" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.Splash" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_screen</item>
+    </style>
+
 </resources>

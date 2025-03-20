@@ -10,9 +10,10 @@ data class QuoteEntity(
     val author: String,
     val category: String,
     var isLiked: Boolean = false,
-    var isSaved: Boolean = false
+    var isSaved: Boolean = false,
+    val lastUpdated: Long = System.currentTimeMillis()
 ) {
-    fun toQuote() = Quote(id, quote, author, category, isLiked, isSaved)
+    fun toQuote() = Quote(id, quote, author, category, isLiked, isSaved, lastUpdated)
 }
 
-fun Quote.toQuoteEntity() = QuoteEntity(id, quote, author, category, isLiked, isSaved)
+fun Quote.toQuoteEntity() = QuoteEntity(id, quote, author, category, isLiked, isSaved, lastUpdated)

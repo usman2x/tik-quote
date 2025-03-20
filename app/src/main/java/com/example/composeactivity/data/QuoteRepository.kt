@@ -1,6 +1,7 @@
 package com.example.composeactivity.data
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 class QuoteRepository(private val quoteDao: QuoteDao, private val api: QuoteApi) {
@@ -17,9 +18,29 @@ class QuoteRepository(private val quoteDao: QuoteDao, private val api: QuoteApi)
         }
     }
 
-    suspend fun saveQuotesToDB(quotes: List<Quote>) {
-        quoteDao.insertQuotes(quotes.map { it.toQuoteEntity() })
+    suspend fun updateQuotesInDB(apiQuotes: List<Quote>) {
+        val existingQuotes = quoteDao.getAllQuotes().first().associateBy { it.id }
+
+        val quotesToInsertOrUpdate = apiQuotes.map { apiQuote ->
+            val existingQuote = existingQuotes[apiQuote.id]
+
+            if (existingQuote == null) {
+                apiQuote.toQuoteEntity()
+            } else if (existingQuote.lastUpdated < apiQuote.lastUpdated) {
+                existingQuote.copy(
+                    quote = apiQuote.quote,
+                    author = apiQuote.author,
+                    category = apiQuote.category,
+                    lastUpdated = apiQuote.lastUpdated
+                )
+            } else {
+                existingQuote
+            }
+        }
+
+        quoteDao.insertQuotes(quotesToInsertOrUpdate)
     }
+
 
     suspend fun toggleLike(quote: Quote) {
         quoteDao.updateLikeStatus(quote.id, !quote.isLiked)
@@ -32,9 +53,5 @@ class QuoteRepository(private val quoteDao: QuoteDao, private val api: QuoteApi)
     suspend fun getCategories(): List<String> {
         val categories = quoteDao.getCategories()
         return listOf("All") + categories
-    }
-
-    suspend fun clearQuotesFromDB() {
-        quoteDao.deleteAllQuotes()
     }
 }

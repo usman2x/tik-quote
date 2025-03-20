@@ -6,6 +6,7 @@ data class Quote(
     val author: String,
     val category: String,
     var isLiked: Boolean = false,
-    var isSaved: Boolean = false
+    var isSaved: Boolean = false,
+    val lastUpdated: Long = 0
 )
 data class QuotesResponse(val quotes: List<Quote>)

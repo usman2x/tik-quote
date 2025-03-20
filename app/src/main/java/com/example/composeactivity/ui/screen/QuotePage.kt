@@ -2,6 +2,7 @@ package com.example.composeactivity.ui.screen
 
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -62,6 +63,7 @@ fun QuoteScreen(viewModel: QuoteViewModel) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun QuotePage(quoteViewModel: QuoteViewModel = viewModel()) {
+    val context = LocalContext.current
 
     var selectedCategory by remember { mutableStateOf("All") }
     val categories = quoteViewModel.categories
@@ -86,7 +88,13 @@ fun QuotePage(quoteViewModel: QuoteViewModel = viewModel()) {
     }
 
     Scaffold(
-        topBar = { AppBar(title = "Quotes") },
+        topBar = {
+            AppBar(title = "Quotes") {
+                quoteViewModel.syncQuotes {
+                    Toast.makeText(context, "Sync Completed!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        },
         content = { paddingValues ->
             Column(
                 modifier = Modifier
@@ -216,7 +224,10 @@ fun QuoteSectionPreview() {
 }
 
 @Composable
-fun QuoteSectionPreviewContent(quotes: List<Quote>, viewModel: QuoteViewModel = viewModel<QuoteViewModel>()) {
+fun QuoteSectionPreviewContent(
+    quotes: List<Quote>,
+    viewModel: QuoteViewModel = viewModel<QuoteViewModel>()
+) {
     Column {
         quotes.forEach { quote ->
             QuoteCard(quote, viewModel)

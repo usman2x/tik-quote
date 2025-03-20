@@ -1,4 +1,3 @@
 <resources>
-    <string name="app_name">Compose Activity</string>
-    <string name="greeting_name">Usman</string>
+    <string name="app_name">Quotes</string>
 </resources>
