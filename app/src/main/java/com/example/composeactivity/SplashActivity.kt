@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.composeactivity.MainActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

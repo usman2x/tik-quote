@@ -16,12 +16,20 @@ class QuoteViewModel(private val repository: QuoteRepository) : ViewModel() {
     private val _quotes = MutableStateFlow<List<Quote>>(emptyList())
     val quotes: StateFlow<List<Quote>> = _quotes.asStateFlow()
 
+    private val _likedQuotes = MutableStateFlow<List<Quote>>(emptyList())
+    val likedQuotes: StateFlow<List<Quote>> = _likedQuotes.asStateFlow()
+
+    private val _savedQuotes = MutableStateFlow<List<Quote>>(emptyList())
+    val savedQuotes: StateFlow<List<Quote>> = _savedQuotes.asStateFlow()
+
     var categories by mutableStateOf<List<String>>(emptyList())
         private set
 
     init {
         observeQuotes()
         fetchQuotes()
+        fetchLikedQuotes()
+        fetchSavedQuotes()
     }
 
     private fun fetchCategories() {
@@ -45,6 +53,21 @@ class QuoteViewModel(private val repository: QuoteRepository) : ViewModel() {
             repository.getQuotesFromDB().collect { updatedQuotes ->
                 _quotes.value = updatedQuotes
                 fetchCategories()
+            }
+        }
+    }
+
+    private fun fetchLikedQuotes() {
+        viewModelScope.launch {
+            repository.getLikedQuotesFromDB().collect { likedQuotes ->
+                _likedQuotes.value = likedQuotes
+            }
+        }
+    }
+    private fun fetchSavedQuotes() {
+        viewModelScope.launch {
+            repository.getSavedQuotesFromDB().collect { savedQuotes ->
+                _savedQuotes.value = savedQuotes
             }
         }
     }

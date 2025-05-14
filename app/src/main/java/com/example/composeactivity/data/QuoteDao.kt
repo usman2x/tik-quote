@@ -8,8 +8,15 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface QuoteDao {
+
     @Query("SELECT * FROM quotes")
     fun getAllQuotes(): Flow<List<QuoteEntity>>
+
+    @Query("SELECT * FROM quotes WHERE isLiked = 1")
+    fun getAllLikedQuotes(): Flow<List<QuoteEntity>>
+
+    @Query("SELECT * FROM quotes WHERE isSaved = 1")
+    fun getAllSavedQuotes(): Flow<List<QuoteEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuotes(quotes: List<QuoteEntity>)

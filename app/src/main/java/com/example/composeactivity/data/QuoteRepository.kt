@@ -10,6 +10,14 @@ class QuoteRepository(private val quoteDao: QuoteDao, private val api: QuoteApi)
         return quoteDao.getAllQuotes().map { list -> list.map { it.toQuote() } }
     }
 
+    fun getLikedQuotesFromDB(): Flow<List<Quote>> {
+        return quoteDao.getAllLikedQuotes().map { list -> list.map { it.toQuote() } }
+    }
+
+    fun getSavedQuotesFromDB(): Flow<List<Quote>> {
+        return quoteDao.getAllSavedQuotes().map { list -> list.map { it.toQuote() } }
+    }
+
     suspend fun getQuotesFromAPI(): List<Quote> {
         return try {
             api.getQuotes().quotes

@@ -2,7 +2,6 @@ package com.example.composeactivity.ui.screen
 
 import android.content.Context
 import android.content.Intent
-import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,7 +26,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,14 +42,21 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.composeactivity.data.Quote
 import com.example.composeactivity.viewmodel.QuoteViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.composeactivity.data.QuoteApi
+import com.example.composeactivity.data.QuoteDao
+import com.example.composeactivity.data.QuoteEntity
+import com.example.composeactivity.data.QuoteRepository
+import com.example.composeactivity.data.QuotesResponse
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 @Composable
 fun QuoteScreen(viewModel: QuoteViewModel) {
@@ -63,7 +68,6 @@ fun QuoteScreen(viewModel: QuoteViewModel) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun QuotePage(quoteViewModel: QuoteViewModel = viewModel()) {
-    val context = LocalContext.current
 
     var selectedCategory by remember { mutableStateOf("All") }
     val categories = quoteViewModel.categories
@@ -87,49 +91,36 @@ fun QuotePage(quoteViewModel: QuoteViewModel = viewModel()) {
         pagerState.scrollToPage(0)
     }
 
-    Scaffold(
-        topBar = {
-            AppBar(title = "Quotes") {
-                quoteViewModel.syncQuotes {
-                    Toast.makeText(context, "Sync Completed!", Toast.LENGTH_SHORT).show()
-                }
-            }
-        },
-        content = { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                Color(0xFF1A1A2E),
-                                Color(0xFF16213E)
-                            )
-                        )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        Color(0xFF1A1A2E),
+                        Color(0xFF16213E)
                     )
-                    .padding(paddingValues)
+                )
+            )
+            .padding(8.dp)
+    ) {
+        CategoryTabs(categories, selectedCategory) { selectedCategory = it }
+        if (filteredQuotes.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                Spacer(modifier = Modifier.height(8.dp))
-                CategoryTabs(categories, selectedCategory) { selectedCategory = it }
-                Spacer(modifier = Modifier.height(8.dp))
-                if (filteredQuotes.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "No Quotes Available", color = Color.White, fontSize = 18.sp)
-                    }
-                } else {
-                    VerticalPager(
-                        state = pagerState,
-                        modifier = Modifier.weight(1f)
-                    ) { page ->
-                        QuoteCard(filteredQuotes[page], quoteViewModel)
-                    }
-                }
+                Text(text = "No Quotes Available", color = Color.White, fontSize = 18.sp)
+            }
+        } else {
+            VerticalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f)
+            ) { page ->
+                QuoteCard(filteredQuotes[page], quoteViewModel)
             }
         }
-    )
+    }
 }
 
 @Composable
@@ -151,18 +142,23 @@ fun QuoteCard(quote: Quote, quoteViewModel: QuoteViewModel) {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "\"${quote.quote}\"",
-                fontSize = 40.sp,
-                fontStyle = FontStyle.Italic,
-                color = Color.Black
+                text = quote.quote,
+                color = Color.Black,
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.titleLarge,
+                maxLines = 10,
+                lineHeight = 30.sp,
+                fontFamily = FontFamily.Serif
+
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "- ${quote.author}",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
+                text = quote.author,
+                fontStyle = FontStyle.Italic,
                 color = Color.DarkGray,
-                textAlign = TextAlign.Left
+                textAlign = TextAlign.Left,
+                modifier = Modifier.fillMaxWidth(),
+                fontFamily = FontFamily.Cursive
             )
             Spacer(modifier = Modifier.height(24.dp))
             Row(
@@ -174,7 +170,7 @@ fun QuoteCard(quote: Quote, quoteViewModel: QuoteViewModel) {
                         imageVector = if (quote.isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                         contentDescription = "Like",
                         tint = if (quote.isLiked) Color.Red else Color.Black,
-                        modifier = Modifier.size(50.dp)
+
                     )
                 }
 
@@ -183,7 +179,7 @@ fun QuoteCard(quote: Quote, quoteViewModel: QuoteViewModel) {
                         imageVector = if (quote.isSaved) Icons.Outlined.AddCircle else Icons.Filled.Add,
                         contentDescription = "Save",
                         tint = if (quote.isSaved) Color.Blue else Color.Black,
-                        modifier = Modifier.size(50.dp)
+
                     )
                 }
 
@@ -192,53 +188,11 @@ fun QuoteCard(quote: Quote, quoteViewModel: QuoteViewModel) {
                         imageVector = Icons.Filled.Share,
                         contentDescription = "Share",
                         tint = Color.Black,
-                        modifier = Modifier.size(50.dp)
                     )
                 }
             }
         }
     }
-}
-
-@Composable
-fun QuoteSectionPreview() {
-    val mockQuotes = listOf(
-        Quote(
-            1,
-            "Your heart is the size of an ocean. Go find yourself in its hidden depths.",
-            "Rumi",
-            ""
-        ),
-        Quote(
-            2,
-            "Thinking is the capital, Enterprise is the way, Hard Work is the solution.",
-            "Abdul Kalam",
-            ""
-        ),
-        Quote(3, "The best way to predict the future is to invent it.", "Alan Kay", "")
-    )
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        QuoteSectionPreviewContent(mockQuotes)
-    }
-}
-
-@Composable
-fun QuoteSectionPreviewContent(
-    quotes: List<Quote>,
-    viewModel: QuoteViewModel = viewModel<QuoteViewModel>()
-) {
-    Column {
-        quotes.forEach { quote ->
-            QuoteCard(quote, viewModel)
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewQuoteSection() {
-    QuoteSectionPreview()
 }
 
 fun shareQuote(context: Context, quote: Quote) {
@@ -250,4 +204,80 @@ fun shareQuote(context: Context, quote: Quote) {
     context.startActivity(Intent.createChooser(shareIntent, "Share via"))
 }
 
+@Composable
+fun QuoteSectionPreview() {
+    val mockQuotes = listOf(
+        Quote(
+            1,
+            "Your heart is the size of an ocean. Go find yourself in its hidden depths.",
+            "Rumi",
+            "Love"
+        ),
+        Quote(
+            2,
+            "Thinking is the capital, Enterprise is the way, Hard Work is the solution.",
+            "Abdul Kalam",
+            "ABC"
+        ),
+        Quote(3, "The best way to predict the future is to invent it.", "Alan Kay", "Nill")
+    )
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        QuoteSectionPreviewContent(mockQuotes)
+    }
+}
+
+@Composable
+fun QuoteSectionPreviewContent(
+    quotes: List<Quote>,
+    viewModel: QuoteViewModel = QuoteViewModel(QuoteRepository(MockQuoteDao(), MockApi()))
+) {
+    Column {
+        quotes.forEach { quote ->
+            QuoteCard(quote, viewModel)
+        }
+    }
+}
+
+class MockQuoteDao : QuoteDao {
+    override fun getAllQuotes() = flowOf(emptyList<QuoteEntity>())
+    override fun getAllLikedQuotes(): Flow<List<QuoteEntity>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getAllSavedQuotes(): Flow<List<QuoteEntity>> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun insertQuotes(quotes: List<QuoteEntity>) {}
+    override suspend fun updateLikeStatus(id: Int, isLiked: Boolean) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun updateSaveStatus(id: Int, isSaved: Boolean) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun deleteAllQuotes() {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getCategories(): List<String> {
+        TODO("Not yet implemented")
+    }
+
+}
+
+class MockApi : QuoteApi {
+    override suspend fun getQuotes(): QuotesResponse {
+        TODO("Not yet implemented")
+    }
+
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewQuoteSection() {
+    QuoteSectionPreview()
+}
 

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,10 +19,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun CategoryTabs(
@@ -32,8 +32,8 @@ fun CategoryTabs(
     LazyRow(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(vertical = 4.dp, horizontal = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         items(categories) { category ->
             CategoryTab(category, category == selectedCategory) { onCategorySelected(category) }
@@ -47,12 +47,17 @@ fun CategoryTab(category: String, isSelected: Boolean, onClick: () -> Unit) {
         if (isSelected) Color(0xFFFFC300) else Color(0xFFEAEAEA).copy(alpha = 0.7f)
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(backgroundColor)
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(vertical = 4.dp, horizontal = 8.dp)
     ) {
-        Text(text = category, color = Color.Black, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Text(
+            text = category,
+            color = Color.Black,
+            style = MaterialTheme.typography.titleMedium,
+            fontFamily = FontFamily.Serif
+        )
     }
 }
 

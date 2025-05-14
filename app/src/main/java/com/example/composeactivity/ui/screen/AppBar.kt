@@ -23,8 +23,8 @@ fun AppBar(title: String, onSyncClick: () -> Unit) {
             Text(
                 text = title,
                 color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
             )
         },
         colors = TopAppBarDefaults.topAppBarColors(
