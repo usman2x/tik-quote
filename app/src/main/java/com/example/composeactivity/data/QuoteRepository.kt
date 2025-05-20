@@ -62,4 +62,8 @@ class QuoteRepository(private val quoteDao: QuoteDao, private val api: QuoteApi)
         val categories = quoteDao.getCategories()
         return listOf("All") + categories
     }
+
+    suspend fun searchQuotesFromDB(query: String): List<Quote> {
+        return quoteDao.searchQuotes(query)
+    }
 }

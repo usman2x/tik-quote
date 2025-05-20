@@ -32,4 +32,13 @@ interface QuoteDao {
 
     @Query("SELECT DISTINCT category FROM quotes")
     suspend fun getCategories(): List<String>
+
+    @Query("""
+    SELECT * FROM quotes 
+    WHERE quote LIKE '%' || :query || '%' 
+       OR author LIKE '%' || :query || '%' 
+    COLLATE NOCASE
+""")
+    suspend fun searchQuotes(query: String): List<Quote>
+
 }

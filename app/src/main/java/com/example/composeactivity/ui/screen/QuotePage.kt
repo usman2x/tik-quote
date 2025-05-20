@@ -266,6 +266,10 @@ class MockQuoteDao : QuoteDao {
         TODO("Not yet implemented")
     }
 
+    override suspend fun searchQuotes(query: String): List<Quote> {
+        TODO("Not yet implemented")
+    }
+
 }
 
 class MockApi : QuoteApi {

@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -13,9 +12,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -60,21 +62,34 @@ fun MainScreen(viewModel: QuoteViewModel) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: BottomNavItem.Quotes.route
 
+    val isSearchScreen = currentRoute == BottomNavItem.Search.route
+
+    val searchQuery by viewModel.searchQuery.collectAsState()
+
+
     val title = when (currentRoute) {
         BottomNavItem.Quotes.route -> "All Quotes"
+        BottomNavItem.Search.route -> "Search Quotes"
         BottomNavItem.Liked.route -> "Liked Quotes"
         BottomNavItem.Saved.route -> "Saved Quotes"
-        BottomNavItem.Search.route -> "Search"
+        BottomNavItem.Settings.route -> "Settings"
         else -> "Quotes"
     }
 
     Scaffold(
         topBar = {
-            AppBar(title = title) {
-                viewModel.syncQuotes {
-                    Toast.makeText(context, "Sync Completed!", Toast.LENGTH_SHORT).show()
+            AppBar(
+                title = if (isSearchScreen) "Search Quotes" else title,
+                isSearchEnabled = isSearchScreen,
+                searchQuery = searchQuery,
+                onSearchQueryChange = { viewModel.updateSearchQuery(it) },
+                onSearchToggle = { viewModel.updateSearchQuery("") },
+                onSyncClick = {
+                    viewModel.syncQuotes {
+                        Toast.makeText(context, "Sync Completed!", Toast.LENGTH_SHORT).show()
+                    }
                 }
-            }
+            )
         },
         bottomBar = {
             BottomNavigationBar(navController = navController)
