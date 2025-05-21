@@ -66,4 +66,6 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation (libs.androidx.navigation.compose)
     implementation (libs.accompanist.navigation.material)
+    implementation (libs.androidx.datastore.preferences)
+
 }

@@ -60,7 +60,7 @@ class QuoteRepository(private val quoteDao: QuoteDao, private val api: QuoteApi)
 
     suspend fun getCategories(): List<String> {
         val categories = quoteDao.getCategories()
-        return listOf("All") + categories
+        return categories
     }
 
     suspend fun searchQuotesFromDB(query: String): List<Quote> {

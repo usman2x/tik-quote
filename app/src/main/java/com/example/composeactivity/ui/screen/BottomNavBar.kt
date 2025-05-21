@@ -1,7 +1,5 @@
 package com.example.composeactivity.ui.screen
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Search
@@ -17,12 +15,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.composeactivity.data.DataStoreManager
+import com.example.composeactivity.ui.theme.CategoryUnselected
 import com.example.composeactivity.viewmodel.QuoteViewModel
+import com.example.composeactivity.viewmodel.SettingsViewModel
 
 
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
@@ -43,7 +46,10 @@ fun BottomNavigationBar(navController: NavController) {
         BottomNavItem.Saved,
         BottomNavItem.Settings
     )
-    NavigationBar {
+    NavigationBar(
+        containerColor = CategoryUnselected
+    ) {
+
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
         items.forEach { item ->
@@ -52,6 +58,10 @@ fun BottomNavigationBar(navController: NavController) {
                 label = { Text(text = item.label) },
                 alwaysShowLabel = true,
                 selected = currentRoute == item.route,
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color.Black,
+                    unselectedIconColor = Color.Gray
+                ),
                 onClick = {
                     navController.navigate(item.route) {
                         popUpTo(navController.graph.startDestinationId) { saveState = true }
@@ -65,18 +75,23 @@ fun BottomNavigationBar(navController: NavController) {
 }
 
 @Composable
-fun SettingsScreen() {
-    Text("Settings Screen", color = Color.White, modifier = Modifier.fillMaxSize().background(Color(0xFF1A1A2E)))
-}
-
-@Composable
 fun AppNavHost(navController: NavHostController, viewModel: QuoteViewModel) {
+    val context = LocalContext.current
+
+    val categories = viewModel.categories.sorted()
+
+    val dataStoreManager = remember { DataStoreManager(context) }
+
+    val settingsViewModel = remember(categories) {
+        SettingsViewModel(dataStoreManager, categories)
+    }
+
     NavHost(
         navController = navController,
         startDestination = BottomNavItem.Quotes.route
     ) {
         composable(BottomNavItem.Quotes.route) {
-            QuoteScreen(viewModel)
+            QuoteScreen(viewModel, settingsViewModel)
         }
         composable(BottomNavItem.Search.route) {
             SearchScreen(viewModel)
@@ -88,7 +103,13 @@ fun AppNavHost(navController: NavHostController, viewModel: QuoteViewModel) {
             SavedQuoteScreen(viewModel)
         }
         composable(BottomNavItem.Settings.route) {
-            SettingsScreen()
+            val selectedCategories by settingsViewModel.selectedCategories.collectAsState()
+            SettingsScreen(
+                allCategories = categories,
+                selectedCategories = selectedCategories.toList(),
+                onCategoryToggle = settingsViewModel::toggleCategory,
+                onSelectAllToggle = settingsViewModel::setAllCategories
+            )
         }
     }
 }

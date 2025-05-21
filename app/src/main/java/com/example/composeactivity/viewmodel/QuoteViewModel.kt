@@ -25,9 +25,6 @@ class QuoteViewModel(private val repository: QuoteRepository) : ViewModel() {
     private val _savedQuotes = MutableStateFlow<List<Quote>>(emptyList())
     val savedQuotes: StateFlow<List<Quote>> = _savedQuotes.asStateFlow()
 
-    private val _searchResults = MutableStateFlow<List<Quote>>(emptyList())
-    val searchResults: StateFlow<List<Quote>> = _searchResults.asStateFlow()
-
     var categories by mutableStateOf<List<String>>(emptyList())
         private set
 
@@ -43,10 +40,6 @@ class QuoteViewModel(private val repository: QuoteRepository) : ViewModel() {
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    private var allQuotes: List<Quote> = emptyList()
-
-    private var _lastSearchQuery: String = ""
 
     init {
         observeQuotes()
@@ -74,12 +67,7 @@ class QuoteViewModel(private val repository: QuoteRepository) : ViewModel() {
     private fun observeQuotes() {
         viewModelScope.launch {
             repository.getQuotesFromDB().collect { updatedQuotes ->
-                // allQuotes = updatedQuotes
                 _quotes.value = updatedQuotes
-//                val currentQuery = _lastSearchQuery
-//                if (currentQuery.isNotEmpty()) {
-//                    searchQuotes(currentQuery)
-//                }
                 fetchCategories()
             }
         }
@@ -125,22 +113,5 @@ class QuoteViewModel(private val repository: QuoteRepository) : ViewModel() {
 
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
-    }
-
-    fun searchQuotes(query: String) {
-        _lastSearchQuery = query.trim()
-        if (_lastSearchQuery.isEmpty()) {
-            _searchResults.value = allQuotes
-            return
-        }
-
-        val lowerQuery = _lastSearchQuery.lowercase()
-
-        val filtered = allQuotes.filter { quote ->
-            quote.quote.contains(lowerQuery, ignoreCase = true) ||
-                    quote.author.contains(lowerQuery, ignoreCase = true)
-        }
-
-        _searchResults.value = filtered
     }
 }

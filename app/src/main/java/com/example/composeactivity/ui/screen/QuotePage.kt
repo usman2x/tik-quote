@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
@@ -41,9 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,29 +52,42 @@ import com.example.composeactivity.data.QuoteDao
 import com.example.composeactivity.data.QuoteEntity
 import com.example.composeactivity.data.QuoteRepository
 import com.example.composeactivity.data.QuotesResponse
+import com.example.composeactivity.ui.theme.AppSpacing
+import com.example.composeactivity.ui.theme.IconDefaultColor
+import com.example.composeactivity.ui.theme.LikedColor
+import com.example.composeactivity.ui.theme.SavedColor
+import com.example.composeactivity.ui.theme.quoteBackground
 import kotlinx.coroutines.flow.Flow
+import com.example.composeactivity.viewmodel.SettingsViewModel
 import kotlinx.coroutines.flow.flowOf
 
 @Composable
-fun QuoteScreen(viewModel: QuoteViewModel) {
+fun QuoteScreen(
+    viewModel: QuoteViewModel,
+    settingsViewModel: SettingsViewModel
+) {
     Column {
-        QuotePage(viewModel)
+        QuotePage(viewModel, settingsViewModel)
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun QuotePage(quoteViewModel: QuoteViewModel = viewModel()) {
+fun QuotePage(quoteViewModel: QuoteViewModel = viewModel(), settingsViewModel: SettingsViewModel) {
+    val preferenceCategories by settingsViewModel.selectedCategories.collectAsState()
 
     var selectedCategory by remember { mutableStateOf("All") }
-    val categories = quoteViewModel.categories
+
+    val categories = listOf("All") + preferenceCategories.toList().sorted()
 
     val quotes by quoteViewModel.quotes.collectAsState()
 
-    val filteredQuotes by remember(quotes, selectedCategory) {
+    val filteredQuotes by remember(quotes, preferenceCategories, selectedCategory) {
         derivedStateOf {
-            if (selectedCategory == "All") quotes
-            else quotes.filter { it.category == selectedCategory }
+            val preferenceFiltered = quotes.filter { it.category in preferenceCategories }
+
+            if (selectedCategory == "All") preferenceFiltered
+            else preferenceFiltered.filter { it.category == selectedCategory }
         }
     }
 
@@ -110,7 +120,12 @@ fun QuotePage(quoteViewModel: QuoteViewModel = viewModel()) {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "No Quotes Available", color = Color.White, fontSize = 18.sp)
+                val message = if (preferenceCategories.isEmpty()) {
+                    "Please select categories in settings to see quotes."
+                } else {
+                    "No Quotes Available for the selected categories."
+                }
+                Text(text = message, color = Color.White, fontSize = 18.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(16.dp))
             }
         } else {
             VerticalPager(
@@ -127,40 +142,41 @@ fun QuotePage(quoteViewModel: QuoteViewModel = viewModel()) {
 fun QuoteCard(quote: Quote, quoteViewModel: QuoteViewModel) {
 
     val context = LocalContext.current
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val spacing = AppSpacing
+    val shape = MaterialTheme.shapes
+
     Card(
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        shape = shape.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = spacing.small),
         modifier = Modifier
             .fillMaxSize()
-            .padding(12.dp)
+            .padding(spacing.medium)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.LightGray)
-                .padding(24.dp),
+                .background(colorScheme.quoteBackground)
+                .padding(spacing.large),
             verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = quote.quote,
-                color = Color.Black,
+                color = colorScheme.onSurface,
                 modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.titleLarge,
-                maxLines = 10,
-                lineHeight = 30.sp,
-                fontFamily = FontFamily.Serif
-
+                style = typography.titleLarge,
+                maxLines = 10
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(spacing.medium))
             Text(
                 text = quote.author,
-                fontStyle = FontStyle.Italic,
-                color = Color.DarkGray,
+                style = typography.bodyMedium,
+                color = colorScheme.onSurface,
                 textAlign = TextAlign.Left,
-                modifier = Modifier.fillMaxWidth(),
-                fontFamily = FontFamily.Cursive
+                modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(spacing.large))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -169,7 +185,7 @@ fun QuoteCard(quote: Quote, quoteViewModel: QuoteViewModel) {
                     Icon(
                         imageVector = if (quote.isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                         contentDescription = "Like",
-                        tint = if (quote.isLiked) Color.Red else Color.Black,
+                        tint = if (quote.isLiked) LikedColor else IconDefaultColor,
 
                     )
                 }
@@ -178,7 +194,7 @@ fun QuoteCard(quote: Quote, quoteViewModel: QuoteViewModel) {
                     Icon(
                         imageVector = if (quote.isSaved) Icons.Outlined.AddCircle else Icons.Filled.Add,
                         contentDescription = "Save",
-                        tint = if (quote.isSaved) Color.Blue else Color.Black,
+                        tint = if (quote.isSaved) SavedColor else IconDefaultColor,
 
                     )
                 }
@@ -187,7 +203,7 @@ fun QuoteCard(quote: Quote, quoteViewModel: QuoteViewModel) {
                     Icon(
                         imageVector = Icons.Filled.Share,
                         contentDescription = "Share",
-                        tint = Color.Black,
+                        tint = IconDefaultColor,
                     )
                 }
             }
