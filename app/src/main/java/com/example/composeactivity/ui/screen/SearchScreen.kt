@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -22,6 +23,7 @@ import com.example.composeactivity.viewmodel.QuoteViewModel
 @Composable
 fun SearchScreen(quoteViewModel: QuoteViewModel) {
     val searchedQuotes by quoteViewModel.filteredQuotes.collectAsState()
+    val searchQuery by quoteViewModel.searchQuery.collectAsState()
 
     val pagerState = rememberPagerState(
         initialPage = 0,
@@ -41,6 +43,11 @@ fun SearchScreen(quoteViewModel: QuoteViewModel) {
             )
             .padding(8.dp)
     ) {
+        Text(
+            text = "Searching for: \"$searchQuery\"",
+            style = MaterialTheme.typography.titleMedium,
+            color = Color.White
+        )
         if (searchedQuotes.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
