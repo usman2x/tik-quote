@@ -4,17 +4,16 @@ An elegant, modern Android application to explore, save, and like inspirational 
 It supports offline persistence, search, categories, and synchronization with a local JSON backend.
 
 ## Tech Stack
-
-| Layer         | Technology                |
-|---------------|----------------------------|
-| Language      | Kotlin                     |
-| UI            | Jetpack Compose, Material 3 |
-| State         | ViewModel, StateFlow, Coroutines |
-| Persistence   | Room (SQLite)              |
-| Dependency Injection | Manual              |
-| Network/Backend | Retrofit (JSON-based local fetch) |
-| Gradle Version | Kotlin DSL                |
-| Min SDK       | 24                         |
+| Layer                | Technology                          |
+|----------------------|--------------------------------------|
+| Language             | Kotlin                               |
+| UI                   | Jetpack Compose, Material 3          |
+| State                | ViewModel, StateFlow, Coroutines     |
+| Persistence          | Room (SQLite)                        |
+| Dependency Injection | Manual                               |
+| Network/Backend      | Retrofit (JSON-based local fetch)    |
+| Gradle Version       | Kotlin DSL                           |
+| Min SDK              | 24                                   |
 
 ## Project Structure
 
