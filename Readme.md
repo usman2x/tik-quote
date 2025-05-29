@@ -18,15 +18,16 @@ It supports offline persistence, search, categories, and synchronization with a 
 ## Project Structure
 
 📂 app/
-├── data/              # Data models (Quote, Category, etc.), Room Database instance, Retrofit API interfaces, Repository to bridge ViewModel and data layers
+├── data/               # Data models (Quote, Category, etc.), Room DB, Retrofit APIs, Repository
 │
 ├── ui/
-│   ├── screen/        # Screen composables (SearchScreen, LikedQuotes, etc.)
-│   └── theme/         # Centralized theme for the application
+│   ├── screen/         # Screen composables (SearchScreen, LikedQuotes, etc.)
+│   └── theme/          # Centralized theme for the application
 │
-├── viewmodel/         # QuoteViewModel with all app logic
-├── MainActivity.kt    # App entry point
-└── SplashActivity/             
+├── viewmodel/          # QuoteViewModel with all app logic
+├── SplashActivity.kt   # Optional splash screen activity
+└── MainActivity.kt     # App entry point
+           
 
 ## Features
 
